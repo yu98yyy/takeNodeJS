@@ -1,0 +1,48 @@
+version: '3.8'
+services:
+  mongo:
+    image: mongo
+    container_name: my-mongo
+    ports:
+      - "28017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  node:
+    build: .
+    container_name: my-node-app
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/usr/src/app
+    command: npm start
+    depends_on:
+      - mongo
+
+volumes:
+  mongo-data:
+
+
+
+
+
+# version: '3'
+# services:
+#   app:
+#     build: .
+#     ports:
+#       - "3000:3000"
+#     depends_on:
+#       - mongo
+#     environment:
+#       - MONGO_URI=mongodb://mongo:27017/mydatabase
+
+#   mongo:
+#     image: mongo
+#     ports:
+#       - "27017:27017"
+#     volumes:
+#       - mongo-data:/data/db
+
+# volumes:
+#   mongo-data:
