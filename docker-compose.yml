@@ -6,7 +6,8 @@ services:
     ports:
       - "28017:27017"
     volumes:
-      - mongo-data:/data/db
+      - ./mongo-data:/data/db        # データ永続化
+      - ./mongo-config:/etc/mongo    # 設定ファイルをマウント
 
   node:
     build: .
@@ -15,7 +16,7 @@ services:
       - "3000:3000"
     volumes:
       - .:/usr/src/app
-    command: npm start
+    command: npm start # コンテナ内で実行するコマンドを指定
     depends_on:
       - mongo
 
