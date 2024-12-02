@@ -1,31 +1,66 @@
-const express = require('express'); // Expressの宣言
-const app = express();
-const routes = require('./backend/routes'); // index.jsをインポート
+const express = require('express');
 const mongoose = require('mongoose');
-require('dotenv').config(); // .env ファイルの読み込み
+const WebSocket = require('ws');
+const ChatMessage = require('./backend/models/ChatMessage');
+require('dotenv').config();
 
-// 環境変数またはデフォルト値を設定
+const app = express();
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/matchingApp';
 
-// ミドルウェア
-app.use(express.json()); // JSONボディのパース
-app.use('/api', routes); // ルートの登録
-
-// MongoDB接続とサーバーの起動
-mongoose.connect(MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+// MongoDB接続
+mongoose.connect(MONGO_URI)
   .then(() => {
     console.log('Connected to MongoDB');
-    
-    // サーバーを起動
-    app.listen(PORT, () => {
-      console.log(`Server running at http://localhost:${PORT}`);
-    });
   })
   .catch((err) => {
     console.error('Failed to connect to MongoDB:', err.message);
-    process.exit(1); // エラーが発生した場合、プロセスを終了
+    process.exit(1);
   });
+
+// WebSocketサーバーのセットアップ
+const server = app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
+});
+
+const wss = new WebSocket.Server({ server });
+
+// WebSocket接続処理
+wss.on('connection', (ws) => {
+  console.log('Client connected');
+
+  ws.on('message', async (message) => {
+    const parsedMessage = JSON.parse(message);
+
+    // MongoDBにメッセージを保存
+    const chatMessage = new ChatMessage({
+      sender: parsedMessage.sender,
+      recipient: parsedMessage.recipient,
+      message: parsedMessage.message,
+    });
+
+    try {
+      await chatMessage.save();
+      console.log('Message saved to MongoDB');
+    } catch (err) {
+      console.error('Error saving message:', err);
+    }
+
+    // 全クライアントに送信
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify(chatMessage));
+      }
+    });
+  });
+
+  ws.on('close', () => {
+    console.log('Client disconnected');
+  });
+});
+
+
+
+
+
+// npm install ws

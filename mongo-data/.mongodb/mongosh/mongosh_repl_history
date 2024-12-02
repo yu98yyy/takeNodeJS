@@ -1,0 +1,21 @@
+db.chatMessages.insertMany([ { matchId: ObjectId("match_id"), senderId: ObjectId("profile_id"), messageText: "こんにちは！マッチングしましたね。", timestamp: new Date() }] );
+8. 暇ボタンのマッチングチャット
+db.matches.insertMany([ { user1Id: ObjectId("profile_id1"), user2Id: ObjectId("profile_id2"), matchedAt: new Date() }] );
+7. 暇ボタンでマッチングしたペア
+db.matchingQueue.insertOne({ userId: ObjectId("profile_id"), queuedAt: new Date() });
+6. 暇ボタンマッチング待ち
+db.groupMessages.insertMany([ { groupId: ObjectId("chat_group_id"), senderId: ObjectId("sender_profile_id"), messageText: "ようこそ！", timestamp: new Date(), mediaUrl: null, messageType: "text" }] );
+5. グループチャット
+db.personalChats.insertMany([ { senderId: ObjectId("sender_profile_id"), receiverId: ObjectId("receiver_profile_id"), messageText: "こんにちは！", timestamp: new Date(), isRead: false, chatRoomId: ObjectId("chat_group_id"), mediaUrl: null, messageType: "text" }] );
+4. 個人チャット
+db.chatGroups.insertMany([ { groupName: "ヴィーガン集まれ！", comment: "初心者向けグループです！" }, { groupName: "動物守ろうの会", comment: "どっちかっていうとヴィーガンガチ勢向けです" }, { groupName: "みんな違ってみんないい！", comment: "いろんな個性を持っている人達がいます！" }] );
+3. グループ
+db.profiles.insertMany([ { nickName: "ひであき", age: 20, photoUrl: "設定なし", tags: ["ヴィーガン", "ゲーム", "散歩"], comment: "よろしく！" }, { nickName: "そうた", age: 20, photoUrl: "設定なし", tags: ["ゲーム", "バイク", "パーマ"], comment: "仲良くしてね！" }, { nickName: "だいち", age: 20, photoUrl: "設定なし", tags: ["ゲイ", "バスケ", "スニーカー"], comment: "気軽に話しかけて！" }] );
+2. ユーザー（プロフィール）
+db.loginUsers.insertMany([ { userName: "hideaki", mailAddress: "hideaki@gmail.com", password: "hideaki" }] );
+1. ユーザー（ログイン情報）
+db.chatmessages.find().pretty()
+db.chatmessages.insertOne({ sender: "user1", recipient: "user2", message: "Hello, user2!", timestamp: new Date() })
+db.createCollection("chatmessages")
+use matchingApp
+use matchingApp

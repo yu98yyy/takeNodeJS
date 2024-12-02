@@ -107,7 +107,8 @@
     "utils-merge": "^1.0.1",
     "vary": "^1.1.2",
     "webidl-conversions": "^7.0.0",
-    "whatwg-url": "^13.0.0"
+    "whatwg-url": "^13.0.0",
+    "ws": "^8.18.0"
   },
   "scripts": {
     "start": "node server.js",
