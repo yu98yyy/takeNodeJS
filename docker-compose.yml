@@ -4,7 +4,7 @@ services:
     image: mongo
     container_name: my-mongo
     ports:
-      - "28017:27017"
+      - "27017:27017"  # MongoDBのデフォルトポート
     volumes:
       - ./mongo-data:/data/db        # データ永続化
       - ./mongo-config:/etc/mongo    # 設定ファイルをマウント
@@ -16,13 +16,14 @@ services:
       - "3000:3000"
     volumes:
       - .:/usr/src/app
-    command: npm start # コンテナ内で実行するコマンドを指定
+    environment:  # 環境変数を指定
+      - MONGO_URI=mongodb://mongo:27017/matchingApp
+    command: npm start
     depends_on:
       - mongo
 
 volumes:
-  mongo-data:
-
+  mongo-data:  # ボリュームを宣言
 
 
 
