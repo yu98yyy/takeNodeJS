@@ -5,9 +5,9 @@ services:
     ports:
       - "27017:27017"  # MongoDBのデフォルトポート
     volumes:
-      - ./mongo-data:/data/db        # データ永続化
-      - ./mongo-config/mongo-config.yml:/etc/mongo/mongo-config.yml  # 設定ファイルをマウント
-    command: ["mongod", "--config", "/etc/mongo/mongo-config.yml"]  # 設定ファイルを指定
+      - ./backend/db/mongo-data:/data/db        # データ永続化
+      - ./backend/db/mongo-config/mongo-config.yml:/etc/mongo/mongo-config.yml  # 設定ファイルをマウント
+    command: ["mongod", "--config", "/etc/mongo/mongo-config.yml"] # 設定ファイルを指定
 
   node:
     build: .
