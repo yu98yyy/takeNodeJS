@@ -6,7 +6,7 @@ storage:
 net:
   bindIp: 0.0.0.0  # すべてのIPアドレスで接続を許可
   port: 27017      # MongoDBのデフォルトポート
-
+  
 # セキュリティ設定
 security:
   authorization: "enabled"  # 認証を有効にする

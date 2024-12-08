@@ -1,12 +1,16 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const WebSocket = require('ws');
-const ChatMessage = require('./backend/models/ChatMessage'); // チャットメッセージモデルのインポート
+const ChatMessage = require('./backend/models/chatMessage'); // チャットメッセージモデルのインポート
 require('dotenv').config(); // 環境変数を読み込む
 
 const app = express();
 const PORT = process.env.PORT || 3000; // サーバーポート
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/matchingApp'; // MongoDB URI
+
+
+// JSONリクエストボディのパーサー
+app.use(express.json());
 
 // チャット用ルートのインポート
 const chatRoutes = require('./backend/routes/chatRoutes');
@@ -65,3 +69,12 @@ wss.on('connection', (ws) => {
     console.log('Client disconnected'); // 切断時のログ
   });
 });
+
+
+
+
+// ルートエンドポイントを定義
+app.get('/', (req, res) => {
+  res.send('Welcome to the Chat API!'); // シンプルなレスポンスを返す
+});
+

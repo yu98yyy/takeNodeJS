@@ -1,11 +1,13 @@
-const mongoose = require('mongoose');
+const mongoose = require('mongoose'); // mongooseをインポート
 
+// ChatMessageスキーマの定義
 const ChatMessageSchema = new mongoose.Schema({
   chatRoomId: { type: String, required: true }, // チャットルームID
-  sender: { type: String, required: true }, // 送信者のIDまたは名前
-  receiver: { type: String, required: true }, // 受信者のIDまたは名前
-  message: { type: String, required: true }, // メッセージ内容
-  timestamp: { type: Date, default: Date.now }, // メッセージ送信時刻
+  sender: { type: String, required: true },    // メッセージの送信者
+  receiver: { type: String, required: true },  // メッセージの受信者
+  message: { type: String, required: true },   // メッセージ本文
+  timestamp: { type: Date, default: Date.now } // メッセージの送信時刻
 });
 
+// モデルをエクスポート
 module.exports = mongoose.model('ChatMessage', ChatMessageSchema);

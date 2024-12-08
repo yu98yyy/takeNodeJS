@@ -37,25 +37,3 @@ app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 
-
-// const mongoose = require('mongoose');
-// const express = require('express');
-
-// const app = express();
-
-// // MongoDB接続
-// const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/mydatabase';
-// mongoose.connect(mongoURI, {
-//   useNewUrlParser: true,
-//   useUnifiedTopology: true,
-// })
-// .then(() => console.log('MongoDB connected!'))
-// .catch((err) => console.log(err));
-
-// app.get('/', (req, res) => {
-//   res.send('Hello World!');
-// });
-
-// app.listen(3000, () => {
-//   console.log('Server running on port 3000');
-// });

@@ -3,11 +3,14 @@ services:
     image: mongo
     container_name: my-mongo
     ports:
-      - "27017:27017"  # MongoDBのデフォルトポート
+      - "27018:27017" # ホスト側のポートを27018に変更
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: adminpassword
     volumes:
       - ./backend/db/mongo-data:/data/db        # データ永続化
       - ./backend/db/mongo-config/mongo-config.yml:/etc/mongo/mongo-config.yml  # 設定ファイルをマウント
-    command: ["mongod", "--config", "/etc/mongo/mongo-config.yml"] # 設定ファイルを指定
+    command: ["mongod", "--auth", "--config", "/etc/mongo/mongo-config.yml"] # 認証を有効化
 
   node:
     build: .
@@ -17,7 +20,7 @@ services:
     volumes:
       - .:/usr/src/app
     environment:  # 環境変数を指定
-      - MONGO_URI=mongodb://mongo:27017/matchingApp
+      - MONGO_URI=mongodb://appUser:appPassword@mongo:27017/matchingApp
     command: npm start
     depends_on:
       - mongo
