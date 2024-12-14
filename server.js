@@ -16,32 +16,60 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/matchingAp
 app.use(express.json());
 
 
-// 新規登録エンドポイント
+//新規登録エンドポイント
 app.post('/account/create', async (req, res) => {
-  const { name, birthDate , email, password } = req.body;
+    const { name, birthDate , email, password } = req.body;
 
-  console.log("Received registration request:", req.body); // ここでリクエストの内容をログ出力
+    console.log("Received registration request:", req.body); // ここでリクエストの内容をログ出力
 
-  if (!name || !birthDate|| !email || !password) {
-      return res.status(400).json({ success: false, message: "全てのフィールドを入力してください。" });
-  }
+    if (!name  || !birthDate || !email || !password) {
+        return res.status(400).json({ success: false, message: "全てのフィールドを入力してください。" });
+    }
 
-  try {
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-          return res.status(409).json({ success: false, message: "既に登録されているメールアドレスです。" });
-      }
+    try {
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(409).json({ success: false, message: "既に登録されているメールアドレスです。" });
+        }
 
-      const hashedPassword = await bcryptjs.hash(password, 10);
-      const newUser = new User({ name, email, password: hashedPassword, birthDate });
-      await newUser.save();
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = new User({ name, email, password: hashedPassword, birthDate });
+        await newUser.save();
 
-      res.status(201).json({ success: true, message: "登録に成功しました。" });
-  } catch (err) {
-      console.error("Error during registration:", err);
-      res.status(500).json({ success: false, message: "サーバーエラーが発生しました。" });
-  }
+        res.status(201).json({ success: true, message: "登録に成功しました。" });
+    } catch (err) {
+        console.error("Error during registration:", err);
+        res.status(500).json({ success: false, message: "サーバーエラーが発生しました。" });
+    }
 });
+
+// ログインエンドポイント
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email ||  !password) {
+        return res.status(400).json({ success: false, message: "メールアドレスまたはパスワードを入力してください。" });
+    }
+
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(401).json({ success: false, message: "認証エラー: ユーザーが見つかりません。" });
+        }
+
+
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({ success: false, message: "認証エラー: パスワードが間違っています。" });
+        }
+
+        res.status(200).json({ success: true, message: "ログイン成功", userId: user._id });
+    } catch (err) {
+        console.error("Error during login:", err);
+        res.status(500).json({ success: false, message: "サーバーエラーが発生しました。" });
+    }
+});
+
 
 // ログインエンドポイント
 app.post('/login', async (req, res) => {
