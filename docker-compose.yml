@@ -1,48 +1,31 @@
-version: '3.8'
 services:
   mongo:
     image: mongo
     container_name: my-mongo
     ports:
-      - "28017:27017"
+      - "27018:27017" # ホスト側のポートを27018に変更
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: adminpassword
     volumes:
-      - mongo-data:/data/db
+      - ./backend/db/mongo-data:/data/db        # データ永続化
+      - ./backend/db/mongo-config/mongo-config.yml:/etc/mongo/mongo-config.yml  # 設定ファイルをマウント
+    command: ["mongod", "--auth", "--config", "/etc/mongo/mongo-config.yml"] # 認証を有効化
 
   node:
     build: .
     container_name: my-node-app
     ports:
-      - "3000:3000"
+      - "3000:3000" # HTTPサーバーのポート
+      - "8080:8080" # WebSocketサーバーのポート
     volumes:
       - .:/usr/src/app
+      - /user/src/app/node_modules  #add
+    environment:  # 環境変数を指定
+      - MONGO_URI=mongodb://appUser:appPassword@mongo:27017/matchingApp
     command: npm start
     depends_on:
       - mongo
 
 volumes:
-  mongo-data:
-
-
-
-
-
-# version: '3'
-# services:
-#   app:
-#     build: .
-#     ports:
-#       - "3000:3000"
-#     depends_on:
-#       - mongo
-#     environment:
-#       - MONGO_URI=mongodb://mongo:27017/mydatabase
-
-#   mongo:
-#     image: mongo
-#     ports:
-#       - "27017:27017"
-#     volumes:
-#       - mongo-data:/data/db
-
-# volumes:
-#   mongo-data:
+  mongo-data:  # ボリュームを宣言

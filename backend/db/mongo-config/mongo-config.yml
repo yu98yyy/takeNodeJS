@@ -1,0 +1,16 @@
+# MongoDBのデータベース保存場所
+storage:
+  dbPath: /data/db
+
+# ネットワーク設定
+net:
+  bindIp: 0.0.0.0  # すべてのIPアドレスで接続を許可
+  port: 27017      # MongoDBのデフォルトポート
+  
+# セキュリティ設定
+security:
+  authorization: "enabled"  # 認証を有効にする
+
+#開発環境でbindIp: 0.0.0.0を使用してる
+#本番環境ではbindIp: 127.0.0.1を設定するか、ファイアウォールで接続元を制限しないといけない 
+#security設定を有効にしてるから場合、ユーザーの作成が必要
