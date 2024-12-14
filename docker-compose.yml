@@ -16,9 +16,11 @@ services:
     build: .
     container_name: my-node-app
     ports:
-      - "3000:3000"
+      - "3000:3000" # HTTPサーバーのポート
+      - "8080:8080" # WebSocketサーバーのポート
     volumes:
       - .:/usr/src/app
+      - /user/src/app/node_modules  #add
     environment:  # 環境変数を指定
       - MONGO_URI=mongodb://appUser:appPassword@mongo:27017/matchingApp
     command: npm start
