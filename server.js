@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const WebSocket = require('ws');
 const ChatMessage = require('./backend/models/chatMessage'); 
 const User = require('./backend/models/user'); 
+const Profile = require('./backend/models/profile'); // プロフィールモデルをインポート
 const cors = require('cors');
 
 
@@ -16,60 +17,32 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/matchingAp
 app.use(express.json());
 
 
-//新規登録エンドポイント
+// 新規登録エンドポイント
 app.post('/account/create', async (req, res) => {
-    const { name, birthDate , email, password } = req.body;
+  const { name, birthDate , email, password } = req.body;
 
-    console.log("Received registration request:", req.body); // ここでリクエストの内容をログ出力
+  console.log("Received registration request:", req.body); // ここでリクエストの内容をログ出力
 
-    if (!name  || !birthDate || !email || !password) {
-        return res.status(400).json({ success: false, message: "全てのフィールドを入力してください。" });
-    }
+  if (!name || !birthDate || !email || !password) {
+      return res.status(400).json({ success: false, message: "全てのフィールドを入力してください。" });
+  }
 
-    try {
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(409).json({ success: false, message: "既に登録されているメールアドレスです。" });
-        }
+  try {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+          return res.status(409).json({ success: false, message: "既に登録されているメールアドレスです。" });
+      }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({ name, email, password: hashedPassword, birthDate });
-        await newUser.save();
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const newUser = new User({ name, email, password: hashedPassword, birthDate });
+      await newUser.save();
 
-        res.status(201).json({ success: true, message: "登録に成功しました。" });
-    } catch (err) {
-        console.error("Error during registration:", err);
-        res.status(500).json({ success: false, message: "サーバーエラーが発生しました。" });
-    }
+      res.status(201).json({ success: true, message: "登録に成功しました。" });
+  } catch (err) {
+      console.error("Error during registration:", err);
+      res.status(500).json({ success: false, message: "サーバーエラーが発生しました。" });
+  }
 });
-
-// ログインエンドポイント
-app.post('/login', async (req, res) => {
-    const { email, password } = req.body;
-
-    if (!email ||  !password) {
-        return res.status(400).json({ success: false, message: "メールアドレスまたはパスワードを入力してください。" });
-    }
-
-    try {
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(401).json({ success: false, message: "認証エラー: ユーザーが見つかりません。" });
-        }
-
-
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-            return res.status(401).json({ success: false, message: "認証エラー: パスワードが間違っています。" });
-        }
-
-        res.status(200).json({ success: true, message: "ログイン成功", userId: user._id });
-    } catch (err) {
-        console.error("Error during login:", err);
-        res.status(500).json({ success: false, message: "サーバーエラーが発生しました。" });
-    }
-});
-
 
 // ログインエンドポイント
 app.post('/login', async (req, res) => {
@@ -85,7 +58,8 @@ app.post('/login', async (req, res) => {
           return res.status(401).json({ success: false, message: "認証エラー: ユーザーが見つかりません。" });
       }
 
-      const isPasswordValid = await bcryptjs.compare(password, user.password);
+
+      const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
           return res.status(401).json({ success: false, message: "認証エラー: パスワードが間違っています。" });
       }
@@ -97,6 +71,68 @@ app.post('/login', async (req, res) => {
   }
 });
 
+// プロフィール作成エンドポイント
+app.post('/profile/create', async (req, res) => {
+  const { userId, name, age, tags, message } = req.body;
+
+   // 必須フィールドのチェック
+   if (!userId || !name || age == null || !tags || !Array.isArray(tags)) {
+      return res.status(400).json({ success: false, message: "全てのフィールドを入力してください。" });
+  }
+
+  // userId の形式を確認
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+      console.error("Invalid userId format:", userId); // エラーログ
+      return res.status(400).json({ success: false, message: "無効なユーザーIDです。" });
+  }
+
+  // 年齢が数値であるかチェック
+  if (typeof age !== 'number' || age < 0) {
+      return res.status(400).json({ success: false, message: "正しい年齢を入力してください。" });
+  }
+
+  try {
+      // userId を ObjectId に変換
+      const objectId = new mongoose.Types.ObjectId(userId);
+
+
+      // プロフィールデータの作成
+      const newProfile = new Profile({
+          userId: objectId, // ObjectId型で保存
+          name,
+          age,
+          tags: tags.slice(0, 10), // タグを最大10個までに制限
+          message,
+      });
+
+      // MongoDBに保存
+      await newProfile.save();
+
+      res.status(201).json({ success: true, message: "プロフィールが作成されました", profile: newProfile });
+  } catch (err) {
+      console.error("Error creating profile:", err);
+      res.status(500).json({ success: false, message: "サーバーエラーが発生しました。" });
+  }
+});
+
+
+// プロフィール取得エンドポイント
+app.get('/profile/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+      const profile = await Profile.findOne({ userId });
+
+      if (!profile) {
+          return res.status(404).json({ success: false, message: "プロフィールが見つかりませんでした。" });
+      }
+
+      res.status(200).json({ success: true, profile });
+  } catch (err) {
+      console.error("Error fetching profile:", err);
+      res.status(500).json({ success: false, message: "サーバーエラーが発生しました。" });
+  }
+});
 
 
 
