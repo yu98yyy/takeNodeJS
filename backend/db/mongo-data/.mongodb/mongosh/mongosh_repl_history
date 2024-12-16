@@ -1,0 +1,88 @@
+db.chatMessages.find().pretty()
+db.chatRooms.find().pretty()
+db.chatRoom.find()
+use admin
+sue admin
+exir
+db.chatRoom.find()
+db.users.find()
+use matchingApp
+db.getUsers()
+db.createUser({ user: "appUser", pwd: "appPassword", roles: [{ role: "readWrite", db: "matchingApp" }] })
+db.getUsers()
+use admin
+db.chatrooms.insertOne({ participants: ["67547429e83be1bba7f7c615", "user2"], /* `userId`ともう一人の参加者を設定*/ lastUpdated: new Date() })
+db.users.find().pretty()
+db.chatrooms.find().pretty()
+use matchingApp
+db.chatrooms.find().pretty()
+use admin
+db.chatrooms.find().pretty()
+use matchingApp
+db.chatrooms.insertOne({ participants: ["user1", "user2"], createdAt: new Date() })
+db.chatrooms.find().pretty()
+use matchingApp
+use admin
+exit
+use matchingApp
+exit
+use admin
+db.chatrooms.find().pretty()
+use matchingApp
+db.chatrooms.find().pretty()
+use admin
+db.chatrooms.find().pretty()
+use matchingApp
+exit
+db.chatRoom.find()
+db.users.find()
+db.chatRoom.find()
+db.chatRoom.insertOne({ _id: ObjectId("64d5b9c2e401a6348f1e89a1"), participants: ["user1", "user2"], createdAt: new Date() })
+db.chatRoom.find()
+use matchingApp
+db.users.find()
+db.users.insertOne({ name: "Test User", email: "testuser@example.com", password: "password123" })
+use matchingApp
+db.users.find()
+use admin
+db.users.find()
+use matchingApp
+db.users.find()
+db.users.deleteOne({ name: "Test User" })
+db.users.find()
+use admin
+db.users.find()
+db.users.insertOne({ name: "Test User", email: "testuser@example.com", password: "password123" })use admin
+db.users.find()
+use matchingApp
+db
+db.getCollectionNames()
+db.users.insertOne({ name: "Test User", email: "testuser@example.com", password: "password123" })
+db.getCollectionNames()
+db.users.find()
+use admin
+db.users.find()
+db.users.find() 
+use matchingApp /
+db.users.find() // 全ユーザー情報を取得
+use matchingApp // データベースを指定
+db.users.find() // 全ユーザー情報を取得
+use matchingApp // データベースを指定
+use admin
+db
+db.users.find() 
+use matchingApp 
+db.users.find() 
+use matchingApp // データベースを指定
+db.users.find() // 全ユーザー情報を取得
+use matchingApp // データベースを指定
+db.getUsers();
+use admin
+docker exec -it my-mongo mongosh
+db.getUsers();
+use matchingApp
+mongodb://appUser:appPassword@mongo:27017/matchingApp
+db.getUsers();
+db.createUser({ user: "appUser", pwd: "appPassword", roles: [ { role: "readWrite", db: "matchingApp" }] });
+db.getUsers();
+use adminn
