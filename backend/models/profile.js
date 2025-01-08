@@ -1,13 +1,14 @@
 const mongoose = require('mongoose');
 
-
+// プロファイルのスキーマ
 const ProfileSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // ユーザーIDを関連付け
-    name: { type: String, required: true },
-    age: { type: Number, required: true, min: 0 },
-    tags: { type: [String], default: [] }, // タグは文字列の配列
-    message: { type: String, default: '' },
-    createdAt: { type: Date, default: Date.now },
+  nickname: { type: String, required: true },
+  age: { type: Number, required: true },
+  tags: { type: [String], required: true },
+  messages: { type: [String], required: true },
+  photos: { type: [String], required: true } // Base64エンコードされた画像
 });
 
-module.exports = mongoose.model('Profile', ProfileSchema);
+const Profile = mongoose.model('Profile', ProfileSchema);
+
+module.exports = Profile;

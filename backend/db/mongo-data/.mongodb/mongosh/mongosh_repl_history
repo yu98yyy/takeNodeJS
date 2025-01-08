@@ -1,3 +1,119 @@
+exit
+ db.chatMessages.find().pretty()
+use mathingApp
+use admin
+db.chatMessages.find().pretty()
+use matchingApp
+use admin
+db.chatMessages.find().pretty()
+use matchingApp
+mongosh
+docker network inspect <network_name>
+db.grantRolesToUser("appUser", [{ role: "readWrite", db: "matchingApp" }])
+use matchingApp
+db.getUser("appUser")
+use matchingApp
+use admin
+use matchingApp
+docker exec -it my-mongo mongosh
+db.getUser("appUser")
+use matchingApp
+db.getUser("appUser")
+use admin
+db.getUser("appUser")
+use matchingApp
+use admin
+db.getUser("appUser")
+use matchingApp
+db.getUser("appUser")
+use matchingApp
+db.getUser("appUser")
+use matchingApp
+use admin
+　exit
+db.getUser("appUser")
+use matchingApp
+use admin
+xexit
+db.getUser("appUser")
+use matchingApp
+use admin
+docker logs my-node-app
+show collections
+use matchingApp
+use admin
+ext
+db.grantRolesToUser("root", [{ role: "readWrite", db: "matchingApp" }])
+db.getUser("root")
+admin> db.grantRolesToUser("root", [{ role: "readWrite", db: "matchingApp" }])
+admin> db.getUser("root")
+db.getUsers()
+use admin
+db.getUsers()
+use admin
+db.getUsers()
+use matchingApp
+use admin
+exit
+use matchingApp
+db.getUsers()
+db.createUser({ user: "appUser", pwd: "appPassword", roles: [ { role: "readWrite", db: "matchingApp" }] });
+roles: [ { role: "readWrite", db: "matchingApp" }]
+user: "appUser", pwd: "appPassword",
+db.createUser({ user: "appUser", pwd: "appPassword", roles: [ { role: "readWrite", db: "matchingApp" }] });
+use mattingapp
+switch messageapp
+use admin
+db.chatMessages.find().pretty()
+use matchingApp
+use admin
+db.chatMessages.find().pretty()
+use matchingApp
+db.chatrooms.find().pretty()
+db.chatRoom.find().pretty()
+db.chatMessages.find().pretty()
+show collections
+db.chatMessages.find().pretty()
+Received message: {"sender":"user1","recipient":"user2","message":"Hello!"}
+WebSocket connected
+use matchingApp
+db.getUsers()
+use admin
+db.chatMessages.find().pretty()
+use matchingApp
+docker exec -it my-mongo mongosh -u myUser -p myPassword --authenticationDatabase admin
+db.system.users.find().pretty()
+use admin
+db.system.users.find().pretty()
+use admin
+db.system.users.find().pretty()
+use admin
+db.system.users.find().pretty()
+use admin
+db.system.users.find().pretty()
+use admin
+db.system.users.find().pretty()
+use admin
+MongoServerError[Unauthorized]: Command find requires authentication
+admin> db.system.users.find().pretty()
+switched to db admin
+db.system.users.find().pretty()
+use admin
+db.system.users.find().pretty()
+use admin
+db.system.users.find().pretty()
+use admin
+db.system.users.find().pretty()
+use admin
+db.system.users.find().pretty()
+use admin
+db.system.users.find().pretty()
+show dbs
+docker exec -it my-mongo mongosh -u myUser -p myPassword --authenticationDatabase admin
+db.system.users.find().pretty()
+use admin
+exit\
+show dbs
 db.chatMessages.find().pretty()
 db.chatRooms.find().pretty()
 db.chatRoom.find()

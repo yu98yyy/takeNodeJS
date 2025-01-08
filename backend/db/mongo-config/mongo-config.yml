@@ -14,3 +14,9 @@ security:
 #開発環境でbindIp: 0.0.0.0を使用してる
 #本番環境ではbindIp: 127.0.0.1を設定するか、ファイアウォールで接続元を制限しないといけない 
 #security設定を有効にしてるから場合、ユーザーの作成が必要
+
+
+
+# docker exec -it my-mongo mongosh
+# db.auth("root", "adminpassword")　これでadminで認証する
+# db.chatMessages.find().pretty() これでメッセージ確認

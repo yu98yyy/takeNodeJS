@@ -166,6 +166,10 @@ wss.on('connection', (ws) => {
   ws.on('message', async (message) => {
     const parsedMessage = JSON.parse(message); // メッセージをJSON形式でパース
 
+    ws.on('message', async (message) => {
+      console.log('Received message:', message); // ここでメッセージの内容を確認
+  });  
+
     // MongoDBにメッセージを保存
     const chatMessage = new ChatMessage({
       sender: parsedMessage.sender, // 送信者
