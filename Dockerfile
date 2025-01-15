@@ -12,7 +12,7 @@ COPY package*.json ./
 # npm installを実行して、依存関係をインストール
 # Node.jsアプリに必要なモジュールをダウンロード
 RUN apt-get update && apt-get install -y python3 make g++
-RUN npm install
+RUN npm rebuild bcrypt --build-from-source
 
 # プロジェクト全体を作業ディレクトリにコピー
 COPY . .

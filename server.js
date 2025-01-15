@@ -5,7 +5,10 @@ const WebSocket = require('ws');
 const ChatMessage = require('./backend/models/chatMessage'); 
 const User = require('./backend/models/user'); 
 const Profile = require('./backend/models/profile'); // プロフィールモデルをインポート
+const bcrypt = require('bcryptjs');
+const Group = require('./backend/models/group.js');
 const cors = require('cors');
+
 
 
 const app = express();
@@ -68,6 +71,31 @@ app.post('/login', async (req, res) => {
   } catch (err) {
       console.error("Error during login:", err);
       res.status(500).json({ success: false, message: "サーバーエラーが発生しました。" });
+  }
+});
+
+app.post('/group/create', async (req, res) => {
+  const { groupname, groupLabel, groupicon } = req.body;  // リクエストボディからデータを取得
+
+  if (!groupname ||  !groupLabel) {
+      return res.status(400).json({ error: '掲示板名と詳細は必須です' });
+  }
+
+  try {
+      // 新しいグループを作成
+      const newGroup = new Group({
+        name: groupname,
+        label: groupLabel,
+        icon: groupicon  ||  '',// デフォルト値として空文字を設定
+      });
+
+      // MongoDBに保存
+      await newGroup.save()
+      // 成功レスポンス
+      res.status(201).json({ message: '掲示板が作成されました', groupId: newGroup._id });
+  } catch (err) {
+      // エラーレスポンス
+      res.status(500).json({ error: '掲示板の作成中にエラーが発生しました' });
   }
 });
 
@@ -156,49 +184,54 @@ const server = app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
 
-// WebSocketサーバーのセットアップ
-const wss = new WebSocket.Server({ server }); // HTTPサーバーにWebSocketを統合
+
+
+
+
+// HTTPサーバーと統合したWebSocketサーバーのセットアップ
+//const wss = new WebSocket.Server({ server }); // server は既存の HTTP サーバー
+
+const wss = new WebSocket.Server({ port: 8080 });
+console.log('WebSocket server running on ws://localhost:8080');
+
 // WebSocket接続処理
-wss.on('connection', (ws) => {
-  console.log('Client connected'); // クライアント接続時のログ
+wss.on('connection', (ws, req) => {
+    console.log(`Client connected from: ${req.socket.remoteAddress}`);
 
-  // クライアントからメッセージを受け取ったときの処理
-  ws.on('message', async (message) => {
-    const parsedMessage = JSON.parse(message); // メッセージをJSON形式でパース
-
+    // クライアントからメッセージを受信
     ws.on('message', async (message) => {
-      console.log('Received message:', message); // ここでメッセージの内容を確認
-  });  
+        console.log(`Received message: ${message}`); // メッセージ内容をログ出力
+        console.log('WebSocket server running on ws://localhost:8080');
 
-    // MongoDBにメッセージを保存
-    const chatMessage = new ChatMessage({
-      sender: parsedMessage.sender, // 送信者
-      recipient: parsedMessage.recipient, // 受信者
-      message: parsedMessage.message, // メッセージ内容
+        try {
+            const parsedMessage = JSON.parse(message); // メッセージをJSONとしてパース
+
+            // メッセージをMongoDBに保存
+            const chatMessage = new ChatMessage({
+                sender: parsedMessage.sender, // 送信者
+                recipient: parsedMessage.recipient, // 受信者
+                message: parsedMessage.message, // メッセージ内容
+            });
+
+            await chatMessage.save(); // 保存処理
+            console.log('Message saved to MongoDB');
+        } catch (err) {
+            console.error('Error processing message:', err); // エラーログ
+        }
+
+        // 全クライアントにメッセージをブロードキャスト
+        wss.clients.forEach((client) => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(message);
+            }
+        });
     });
 
-    try {
-      await chatMessage.save(); // メッセージを保存
-      console.log('Message saved to MongoDB');
-    } catch (err) {
-      console.error('Error saving message:', err); // 保存失敗時のログ
-    }
-
-    // 接続している全クライアントにメッセージを送信
-    wss.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) { // クライアントが接続中の場合
-        client.send(JSON.stringify(chatMessage)); // メッセージを送信
-      }
+    // クライアント切断時の処理
+    ws.on('close', () => {
+        console.log('Client disconnected');
     });
-  });
-
-  // クライアントが切断したときの処理
-  ws.on('close', () => {
-    console.log('Client disconnected'); // 切断時のログ
-  });
 });
-
-
 
 
 // ルートエンドポイントを定義

@@ -1,3 +1,19 @@
+db.chatMessages.find().pretty()
+use matchingApp
+db.chatMessages.find().pretty()
+use mathingApp
+use admin
+exit
+db.getUser("appUser")
+use matchingApp
+db.getUser("appUser")
+db.chatMessages.find().pretty()
+use mathingApp
+use admin
+use dmin
+db.users.find().pretty()
+use matchingApp
+use admin
 exit
  db.chatMessages.find().pretty()
 use mathingApp

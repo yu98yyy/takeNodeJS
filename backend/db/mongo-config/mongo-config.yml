@@ -19,4 +19,5 @@ security:
 
 # docker exec -it my-mongo mongosh
 # db.auth("root", "adminpassword")　これでadminで認証する
+# use matchingApp
 # db.chatMessages.find().pretty() これでメッセージ確認
