@@ -25,6 +25,7 @@ const app = express(); // Expressアプリケーションのインスタンス�
 // HTTP GETリクエスト時のルートハンドラー
 app.get('/', (req, res) => {
   // ルートアクセス時のレスポンスを送信
+  
   res.send('MongoDB Connection Successful!');
 });
 

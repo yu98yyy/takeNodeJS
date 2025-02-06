@@ -1,3 +1,14 @@
+db.getUsers()
+use admin
+db.getUsers()
+ use matchingApp
+use admin
+db.users.findOne({ email: "ka@gmail.com" })
+db.users.find().pretty()
+use matchingApp
+use admin
+use matchingApp
+use admin
 db.chatMessages.find().pretty()
 use matchingApp
 db.chatMessages.find().pretty()

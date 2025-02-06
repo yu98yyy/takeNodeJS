@@ -4,46 +4,86 @@ const mongoose = require('mongoose');
 const WebSocket = require('ws');
 const ChatMessage = require('./backend/models/chatMessage'); 
 const User = require('./backend/models/user'); 
-const Profile = require('./backend/models/profile'); // プロフィールモデルをインポート
+const Profile = require('./backend/models/profile');  // プロフィールモデル
+const MatchingRequest = require('./backend/models/matching');  // マッチングモデル
+const ChatRoom = require('./backend/models/chatRoom');  // チャットルームモデル
 const bcrypt = require('bcryptjs');
 const Group = require('./backend/models/group.js');
 const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
+// const Profile = require('./backend/models/profile'); // プロフィールモデルをインポート
+// const Profile = require('./backend/models/matching'); 
+// const Profile = require('./backend/models/chatRoom'); 
 
 
 
 const app = express();
-const PORT = process.env.PORT || 3000; // サーバーポート
+//const PORT = process.env.PORT || 3000; // サーバーポート
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/matchingApp'; // MongoDB URI
+
+const PORT = process.env.PORT || 3000;
+    console.log(`Server running on http://localhost:${PORT}`);
+;
+
+// 画像の保存先を設定
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + path.extname(file.originalname));  // 一意のファイル名にする
+    }
+});
+const upload = multer({ storage: storage });
 
 
 // JSONリクエストボディのパーサー
 app.use(express.json());
 
 
-// 新規登録エンドポイント
 app.post('/account/create', async (req, res) => {
-  const { name, birthDate , email, password } = req.body;
+    const { name, birthDate, email, password } = req.body;
+  
+    console.log("Received registration request:", req.body); // リクエスト内容をログ出力
+  
+    if (!name || !birthDate || !email || !password) {
+        return res.status(400).json({ success: false, message: "全てのフィールドを入力してください。" });
+    }
+  
+    try {
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(409).json({ success: false, message: "既に登録されているメールアドレスです。" });
+        }
+  
+        // パスワードのハッシュ化
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        // 新しいユーザーの作成
+        const newUser = new User({ name, email, password: hashedPassword, birthDate });
+        await newUser.save();
+  
+        // 登録成功時にuserIdを返す
+        res.status(201).json({ 
+            success: true, 
+            message: "登録に成功しました。",
+            userId: newUser._id  // userIdをクライアントに返す
+        });
+  
+    } catch (err) {
+        console.error("Error during registration:", err);
+        res.status(500).json({ success: false, message: "サーバーエラーが発生しました。" });
+    }
+  });
 
-  console.log("Received registration request:", req.body); // ここでリクエストの内容をログ出力
-
-  if (!name || !birthDate || !email || !password) {
-      return res.status(400).json({ success: false, message: "全てのフィールドを入力してください。" });
-  }
-
+// プロファイル一覧を取得するエンドポイント
+app.get('/profiles', async (req, res) => {
   try {
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-          return res.status(409).json({ success: false, message: "既に登録されているメールアドレスです。" });
-      }
-
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const newUser = new User({ name, email, password: hashedPassword, birthDate });
-      await newUser.save();
-
-      res.status(201).json({ success: true, message: "登録に成功しました。" });
+    const profiles = await Profile.find();
+    res.json(profiles);
   } catch (err) {
-      console.error("Error during registration:", err);
-      res.status(500).json({ success: false, message: "サーバーエラーが発生しました。" });
+    res.status(500).json({ error: 'エラーが発生しました' });
   }
 });
 
@@ -74,6 +114,7 @@ app.post('/login', async (req, res) => {
   }
 });
 
+
 app.post('/group/create', async (req, res) => {
   const { groupname, groupLabel, groupicon } = req.body;  // リクエストボディからデータを取得
 
@@ -101,55 +142,114 @@ app.post('/group/create', async (req, res) => {
 
 // プロフィール作成エンドポイント
 app.post('/profile/create', async (req, res) => {
-  const { userId, name, age, tags, message } = req.body;
-
-   // 必須フィールドのチェック
-   if (!userId || !name || age == null || !tags || !Array.isArray(tags)) {
+    
+  
+  const { userId, nickname, age, tags, message } = req.body;
+  
+    if (!userId || !nickname || age == null || !tags || !Array.isArray(tags)) {
       return res.status(400).json({ success: false, message: "全てのフィールドを入力してください。" });
-  }
-
-  // userId の形式を確認
-  if (!mongoose.Types.ObjectId.isValid(userId)) {
-      console.error("Invalid userId format:", userId); // エラーログ
+    }
+  
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ success: false, message: "無効なユーザーIDです。" });
-  }
-
-  // 年齢が数値であるかチェック
-  if (typeof age !== 'number' || age < 0) {
+    }
+  
+    if (typeof age !== 'number' || age < 0) {
       return res.status(400).json({ success: false, message: "正しい年齢を入力してください。" });
-  }
-
-  try {
-      // userId を ObjectId に変換
-      const objectId = new mongoose.Types.ObjectId(userId);
-
-
-      // プロフィールデータの作成
+    }
+  
+    try {
+      const existingProfile = await Profile.findOne({ userId });
+      if (existingProfile) {
+        return res.status(409).json({ success: false, message: "既にプロフィールが存在します。" });
+      }
+  
       const newProfile = new Profile({
-          userId: objectId, // ObjectId型で保存
-          name,
-          age,
-          tags: tags.slice(0, 10), // タグを最大10個までに制限
-          message,
+        userId: new mongoose.Types.ObjectId(userId),
+        nickname,
+        age,
+        tags: tags.slice(0, 10),  // 最大10個のタグ制限
+        message,
       });
-
-      // MongoDBに保存
+  
       await newProfile.save();
-
+  
       res.status(201).json({ success: true, message: "プロフィールが作成されました", profile: newProfile });
-  } catch (err) {
+    } catch (err) {
       console.error("Error creating profile:", err);
       res.status(500).json({ success: false, message: "サーバーエラーが発生しました。" });
-  }
+    }
+  });
+  
+  // プロフィール更新エンドポイント
+  app.put('/profile/update', async (req, res) => {
+    const { userId, nickname, age, tags, message } = req.body;
+  
+    if (!userId || !nickname || age == null || !tags || !Array.isArray(tags)) {
+      return res.status(400).json({ success: false, message: "全てのフィールドを入力してください。" });
+    }
+  
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ success: false, message: "無効なユーザーIDです。" });
+    }
+  
+    if (typeof age !== 'number' || age < 0) {
+      return res.status(400).json({ success: false, message: "正しい年齢を入力してください。" });
+    }
+  
+    try {
+      const updatedProfile = await Profile.findOneAndUpdate(
+        { userId: new mongoose.Types.ObjectId(userId) },
+        { nickname, age, tags: tags.slice(0, 10), message },
+        { new: true, runValidators: true }
+      );
+  
+      if (!updatedProfile) {
+        return res.status(404).json({ success: false, message: "プロフィールが見つかりませんでした。" });
+      }
+  
+      res.status(200).json({ success: true, message: "プロフィールを更新しました", profile: updatedProfile });
+    } catch (err) {
+      console.error("Error updating profile:", err);
+      res.status(500).json({ success: false, message: "サーバーエラーが発生しました。" });
+    }
+  });
+
+// グループ作成API
+app.post('/group/create', upload.single('groupicon'), async (req, res) => {
+    try {
+        const { groupname, groupLabel } = req.body;
+        const groupIcon = req.file ? `/uploads/${req.file.filename}` : '';  // 画像パス
+
+        if (!groupname || !groupLabel) {
+            return res.status(400).json({ error: '掲示板名と詳細は必須です' });
+        }
+
+        const newGroup = new Group({
+            name: groupname,
+            label: groupLabel,
+            icon: groupIcon
+        });
+
+        await newGroup.save();
+        res.status(201).json({ message: 'グループが作成されました', groupId: newGroup._id });
+    } catch (error) {
+        res.status(500).json({ error: '掲示板の作成中にエラーが発生しました' });
+    }
 });
 
 
-// プロフィール取得エンドポイント
+
+//検索画面API
 app.get('/profile/:userId', async (req, res) => {
   const { userId } = req.params;
 
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).json({ success: false, message: "無効なユーザーIDです。" });
+  }
+
   try {
-      const profile = await Profile.findOne({ userId });
+      const profile = await Profile.findOne({ userId: new mongoose.Types.ObjectId(userId) });
 
       if (!profile) {
           return res.status(404).json({ success: false, message: "プロフィールが見つかりませんでした。" });
@@ -162,6 +262,124 @@ app.get('/profile/:userId', async (req, res) => {
   }
 });
 
+// 承認リクエストを送るAPI
+app.post('/send-approval', async (req, res) => {
+  try {
+      const { fromUserId, toUserId } = req.body;
+
+      if (!fromUserId || !toUserId) {
+          return res.status(400).json({ message: '送信者IDと受信者IDを指定してください。' });
+      }
+
+      if (!isValidObjectId(fromUserId) || !isValidObjectId(toUserId)) {
+          return res.status(400).json({ message: '無効なユーザーIDです。' });
+      }
+
+      if (String(fromUserId) === String(toUserId)) {
+          return res.status(400).json({ message: '自分自身にはリクエストを送信できません。' });
+      }
+
+      const existingRequest = await MatchingRequest.findOne({ fromUserId, toUserId });
+      if (existingRequest) {
+          return res.status(400).json({ message: '既に承認リクエストを送信済みです。' });
+      }
+
+      const toUserProfile = await Profile.findOne({ userId: toUserId });
+      if (!toUserProfile) {
+          return res.status(404).json({ message: 'リクエスト対象のユーザーが見つかりません。' });
+      }
+
+      const newRequest = new MatchingRequest({ fromUserId, toUserId });
+      await newRequest.save();
+
+      res.status(200).json({ message: '承認リクエストを送信しました。', request: newRequest });
+  } catch (error) {
+      console.error('Error in /send-approval:', error);
+      res.status(500).json({ message: 'エラーが発生しました。' });
+  }
+});
+
+// ユーザーIDでプロフィールを取得するAPI
+app.get("/get-userID/:userId", async (req, res) => {
+  try {
+      const { userId } = req.params;
+      console.log("Received userId:", userId); // 🔍 確認
+
+      if (!mongoose.Types.ObjectId.isValid(userId)) {
+          return res.status(400).json({ message: "無効なユーザーIDです。" });
+      }
+
+      const userProfile = await Profile.findOne({ userId: userId });
+
+      if (userProfile) {
+          return res.status(200).json({
+              userId: userProfile.userId.toString(),  // ObjectIdを文字列に変換
+              nickname: userProfile.nickname,
+              age: userProfile.age,
+              message: userProfile.message,
+              icon: userProfile.icon
+          });
+      } else {
+          return res.status(404).json({ message: "プロフィールが見つかりません。" });
+      }
+     
+  } catch (error) {
+      console.error("Server error:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
+// 承認リクエストの一覧取得API
+app.get('/approval-requests', async (req, res) => {
+  try {
+      const requests = await MatchingRequest.find()
+          .populate({ path: 'fromUserId', model: 'User', select: 'name' }) 
+          .populate({ path: 'toUserId', model: 'User', select: 'name' });
+
+      res.status(200).json({ requests });
+  } catch (error) {
+      console.error('Error in /approval-requests:', error);
+      res.status(500).json({ message: 'エラーが発生しました。' });
+  }
+});
+
+// 承認リクエストを承認してチャットルーム作成
+app.post('/approve-request', async (req, res) => {
+  try {
+      const { fromUserId, toUserId } = req.body;
+
+      if (!fromUserId || !toUserId) {
+          return res.status(400).json({ message: '送信者IDと受信者IDを指定してください。' });
+      }
+
+      if (!isValidObjectId(fromUserId) || !isValidObjectId(toUserId)) {
+          return res.status(400).json({ message: '無効なユーザーIDです。' });
+      }
+
+      const existingRequest = await MatchingRequest.findOne({ fromUserId, toUserId });
+      if (!existingRequest) {
+          return res.status(404).json({ message: '承認リクエストが見つかりません。' });
+      }
+
+      const existingChatRoom = await ChatRoom.findOne({
+          participants: { $all: [fromUserId, toUserId] },
+      });
+      if (existingChatRoom) {
+          return res.status(400).json({ message: '既にチャットルームが作成されています。' });
+      }
+
+      await MatchingRequest.deleteOne({ fromUserId, toUserId });
+
+      const newChatRoom = new ChatRoom({ participants: [fromUserId, toUserId] });
+      await newChatRoom.save();
+
+      res.status(200).json({ message: 'チャットルームを作成しました。', chatRoom: newChatRoom });
+  } catch (error) {
+      console.error('Error in /approve-request:', error);
+      res.status(500).json({ message: 'エラーが発生しました。' });
+  }
+});
 
 
 
@@ -233,8 +451,29 @@ wss.on('connection', (ws, req) => {
     });
 });
 
+// ObjectId のバリデーション関数
+function isValidObjectId(id) {
+  return mongoose.Types.ObjectId.isValid(id);
+}
 
-// ルートエンドポイントを定義
+// アカウント一覧を表示するエンドポイント
+app.get('/accounts', async (req, res) => {
+  try {
+    const users = await User.find(); // ユーザーを全件取得
+    if (users.length === 0) {
+      return res.status(404).json({ success: false, message: "ユーザーが見つかりません。" });
+    }
+    res.status(200).json({
+      success: true,
+      users: users
+    });
+  } catch (err) {
+    console.error("Error fetching accounts:", err);
+    res.status(500).json({ success: false, message: "サーバーエラーが発生しました。" });
+  }
+});
+
+// ルートエンドポイントを定義z
 app.get('/', (req, res) => {
   res.send('Welcome to the Chat API!'); // シンプルなレスポンスを返す
 });
@@ -260,9 +499,14 @@ app.use(cors(corsOptions));
 
 
 
+
+
 // 全てのオリジンを許可する場合（開発時のみ推奨）
 // app.use(cors()); 
 
 
 
 // npm install cors websocket
+
+
+
